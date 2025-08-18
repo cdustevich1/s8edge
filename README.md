@@ -10,9 +10,9 @@ A simple and lightweight jailbreak tweak that brought the popular curved "edge" 
 ---
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/BrunoNFL/brunonfl.github.io/master/depictions/com.brunonfl.s8edge/Screenshots/Screenshot1.png" width="200" alt="S8Edge Screenshot 1">
-  <img src="https://raw.githubusercontent.com/BrunoNFL/brunonfl.github.io/master/depictions/com.brunonfl.s8edge/Screenshots/Screenshot2.png" width="200" alt="S8Edge Screenshot 2">
-  <img src="https://raw.githubusercontent.com/BrunoNFL/brunonfl.github.io/master/depictions/com.brunonfl.s8edge/Screenshots/Screenshot3.png" width="200" alt="S8Edge Screenshot 3">
+  <img src="https://raw.githubusercontent.com/BrunoNFL/brunonfl.github.io/master/depictions/com.brunonfl.s8edge/Screenshots/1.jpg" width="200" alt="S8Edge Screenshot 1">
+  <img src="https://raw.githubusercontent.com/BrunoNFL/brunonfl.github.io/master/depictions/com.brunonfl.s8edge/Screenshots/2.jpg" width="200" alt="S8Edge Screenshot 2">
+  <img src="https://raw.githubusercontent.com/BrunoNFL/brunonfl.github.io/master/depictions/com.brunonfl.s8edge/Screenshots/3.jpg" width="200" alt="S8Edge Screenshot 3">
 </p>
 
 ---
