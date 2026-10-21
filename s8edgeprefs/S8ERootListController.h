@@ -1,4 +1,6 @@
-#import <Preferences/Preferences.h>
+#import <Preferences/PSListController.h>
+#import <Preferences/PSSpecifier.h>
+#import <Preferences/PSTableCell.h>
 
 @interface S8ERootListController : PSListController{
   UIView *back;

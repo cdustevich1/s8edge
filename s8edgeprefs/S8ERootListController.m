@@ -2,6 +2,14 @@
 #include "S8ERootListController.h"
 #import <objc/runtime.h>
 #import <spawn.h>
+#import <rootless.h>
+
+// Images ship inside S8EdgePrefs.bundle; load them from the bundle instead of
+// a hard-coded /Library path so they work under the rootless /var/jb prefix.
+static UIImage *S8EPrefsImage(NSString *name) {
+    NSBundle *bundle = [NSBundle bundleForClass:objc_getClass("S8ERootListController")];
+    return [UIImage imageNamed:name inBundle:bundle compatibleWithTraitCollection:nil];
+}
 
 @implementation S8ERootListController
 
@@ -16,8 +24,8 @@
     //[super viewWillAppear:animated];
     /*self.view.tintColor = [UIColor redColor];
     self.navigationController.navigationBar.tintColor = [UIColor redColor];*/
-    [UISegmentedControl appearanceWhenContainedIn:self.class, nil].tintColor = [UIColor colorWithRed: 0.0/255.0 green: 0.0/255.0 blue: 0.0/255.0 alpha: 1.0];
-    [[UISwitch appearanceWhenContainedIn:self.class, nil] setOnTintColor:[UIColor colorWithRed: 0.0/255.0 green: 0.0/255.0 blue: 0.0/255.0 alpha: 1.0]];
+    [UISegmentedControl appearanceWhenContainedInInstancesOfClasses:@[self.class]].tintColor = [UIColor colorWithRed: 0.0/255.0 green: 0.0/255.0 blue: 0.0/255.0 alpha: 1.0];
+    [[UISwitch appearanceWhenContainedInInstancesOfClasses:@[self.class]] setOnTintColor:[UIColor colorWithRed: 0.0/255.0 green: 0.0/255.0 blue: 0.0/255.0 alpha: 1.0]];
 		//[[UIButton appearanceWhenContainedIn:self.class, nil] setOnTintColor:[UIColor colorWithRed: 0.0/255.0 green: 0.0/255.0 blue: 0.0/255.0 alpha: 1.0]];
     [super viewWillAppear:animated];
 
@@ -32,12 +40,12 @@
 		[respringButton release];
 }
 - (void)viewDidAppear:(BOOL)animated{
-    settingsView = [[UIApplication sharedApplication] keyWindow];
+    [super viewDidAppear:animated];
+    settingsView = self.view.window;
     settingsView.tintColor = [UIColor whiteColor];
     self.navigationController.navigationController.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName : [UIColor whiteColor]};
     self.navigationController.navigationController.navigationBar.barTintColor = [UIColor colorWithRed: 0.0/255.0 green: 0.0/255.0 blue: 0.0/255.0 alpha: 0.5];
-    prevStatusStyle = [[UIApplication sharedApplication] statusBarStyle];
-    [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+    // -[UIApplication setStatusBarStyle:] is a no-op on iOS 15+ (view-controller-based status bar), so it was removed.
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -46,7 +54,6 @@
     self.navigationController.navigationController.navigationBar.titleTextAttributes = nil;
     self.navigationController.navigationController.navigationBar.barTintColor = nil;
     //SprevStatusStyle = [[UIApplication sharedApplication] statusBarStyle];
-    [[UIApplication sharedApplication] setStatusBarStyle:prevStatusStyle];
     //self.view.tintColor = nil;
     //self.view.navigationController.navigationBar.tintColor = nil;
 }
@@ -54,7 +61,8 @@
 -(void)respring {
     pid_t pid;
     const char* args[] = {"killall", "backboardd", NULL};
-    posix_spawn(&pid, "/usr/bin/killall", NULL, NULL, (char* const*)args, NULL);
+    // ROOT_PATH adds the rootless /var/jb prefix.
+    posix_spawn(&pid, ROOT_PATH("/usr/bin/killall"), NULL, NULL, (char* const*)args, NULL);
     //system("killall -HUP backboardd");
     //[[objc_getClass("FBSystemService") sharedInstance] exitAndRelaunch:YES];
     //[[%c(FBSystemService) sharedInstance] exitAndRelaunch:YES];
@@ -64,20 +72,18 @@
 
 -(void)paypal {
 
-    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RSSPVLYEBZTTY"]];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=RSSPVLYEBZTTY"] options:@{} completionHandler:nil];
 
 }
 
 -(void)creator {
 
     CGRect screenRect = [[UIScreen mainScreen] bounds];
-		NSDate *currentDate = [NSDate date];
-		NSCalendar* calendar = [NSCalendar currentCalendar];
-		NSDateComponents* components = [calendar components:NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay fromDate:currentDate]; // Get necessary date components
-        int age;
-		age = [components year]-1995;
+    NSDate *currentDate = [NSDate date];
+    NSCalendar* calendar = [NSCalendar currentCalendar];
+    NSDateComponents* components = [calendar components:NSCalendarUnitYear|NSCalendarUnitMonth|NSCalendarUnitDay fromDate:currentDate];
+    int age = (int)([components year] - 1995);
 
-    //if (!UIAccessibilityIsReduceTransparencyEnabled()) {
     self.view.backgroundColor = [UIColor clearColor];
 
     //UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleLight];
@@ -107,7 +113,7 @@
 
     //start image
     basePic = [[UIImageView alloc] init];
-    [basePic setImage:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/S8EdgePrefs.bundle/FotoBrunoApp.png"]];
+    [basePic setImage:S8EPrefsImage(@"FotoBrunoApp")];
     basePic.frame = CGRectMake (blurEffectView.frame.size.width/2 - 90/2, blurEffectView.frame.size.height-490, 90, 90);
     [blurEffectView addSubview:basePic];
     [basePic release];
@@ -147,7 +153,7 @@
     brunoAndradeDescription = [[UILabel alloc] initWithFrame:brunoAndradeDescriptionFrame];
     [brunoAndradeDescription setNumberOfLines:9];
     brunoAndradeDescription.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:14];
-    [brunoAndradeDescription setText: @"I'm 23, Mechatronic Engineer\nwho likes coding a lot and make tweaks\nin my free time. This is also my\nthird public tweak, enjoy!\nFind me on reddit: /u/BrunoNFL"];
+    [brunoAndradeDescription setText:[NSString stringWithFormat:@"I'm %d, Mechatronic Engineer\nwho likes coding a lot and make tweaks\nin my free time. This is also my\nthird public tweak, enjoy!\nFind me on reddit: /u/BrunoNFL", age]];
     [brunoAndradeDescription setBackgroundColor:[UIColor clearColor]];
     brunoAndradeDescription.textColor = [UIColor grayColor];
     brunoAndradeDescription.textAlignment = NSTextAlignmentCenter;
@@ -174,11 +180,10 @@
     //[but setbackgroundImage:[UIImage imageNamed:@"XXX.png"] forState:UIControlStateNormal];
 
     [self.view addSubview:blurEffectView];
-    [UIView beginAnimations:nil context:nil];
-    [UIView setAnimationDuration: 0.3];
-    [blurEffectView setAlpha:1.0];
-    [back setAlpha:1.0];
-    [UIView commitAnimations];
+    [UIView animateWithDuration:0.3 animations:^{
+        [blurEffectView setAlpha:1.0];
+        [back setAlpha:1.0];
+    }];
 
 
     //} else {
@@ -187,13 +192,12 @@
 }
 
 -(void)dismiss {
-    [UIView beginAnimations:nil context:nil];
-    [UIView setAnimationDelegate:self];
-    [UIView setAnimationDuration: 0.3];
-    [UIView setAnimationDidStopSelector:@selector(finshedFadeOut)];
-    [[self.view viewWithTag:12345] setAlpha:0.0];
-    [[self.view viewWithTag:123456] setAlpha:0.0];
-    [UIView commitAnimations];
+    [UIView animateWithDuration:0.3 animations:^{
+        [[self.view viewWithTag:12345] setAlpha:0.0];
+        [[self.view viewWithTag:123456] setAlpha:0.0];
+    } completion:^(BOOL finished) {
+        [self finshedFadeOut];
+    }];
 }
 
 -(void)finshedFadeOut{
@@ -218,7 +222,7 @@
     //CGRect randFrame = CGRectMake(0, 40, width, 60);
 
     UIImageView *basePic = [[UIImageView alloc] init];
-    [basePic setImage:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/S8EdgePrefs.bundle/S8Edge.png"]];
+    [basePic setImage:S8EPrefsImage(@"S8Edge")];
     basePic.frame = picFrame;
 
     _label = [[UILabel alloc] initWithFrame:frame];

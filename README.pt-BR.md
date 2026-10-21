@@ -28,20 +28,48 @@ O S8Edge foi criado como uma solução simples, elegante e puramente cosmética 
 * **Bordas Curvas Simuladas:** O tweak adiciona uma sobreposição limpa à tela que dá a ilusão de bordas de tela curvas.
 * **Cantos Arredondados:** Uma parte fundamental do efeito era arredondar os cantos da tela, que se tornou o aspecto mais popular do tweak.
 * **Opções de Cores (Preto e Branco):** Os usuários podiam escolher entre uma sobreposição preta ou branca para combinar perfeitamente com a cor da borda de seus dispositivos.
-* **Leve e Eficiente:** Projetado para ser uma simples sobreposição de imagem, o tweak teve impacto virtualmente zero no desempenho ou na vida útil da bateria.
+* **Leve e Eficiente:** Projetado como uma sobreposição simples e passiva, o tweak teve impacto virtualmente zero no desempenho ou na vida útil da bateria.
 
-## 🛠️ Implementação Técnica
+## 🛠️ Implementação Técnica e a Correção para o iOS 16
 
-A eficácia do tweak veio de sua implementação simples e inteligente.
+### 1. O Problema Central no iOS 16
+Antes do iOS 16, um tweak do SpringBoard podia criar uma `UIWindow` personalizada em qualquer lugar usando `[[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds]`. O UIKit renderizava automaticamente qualquer janela avulsa na tela principal.
 
-* **Sobreposição com Janela de Nível Superior:** Todo o efeito é alcançado criando uma única `UIWindow` em tela cheia que fica sobre todo o outro conteúdo (`UIWindowLevelAlert`). Esta janela é transparente e não interativa.
-* **Máscara Baseada em Imagem:** O efeito "curvo" é criado adicionando uma `UIImageView` a esta janela. A imagem é uma máscara PNG simples com cantos e bordas transparentes, que se sobrepõe à UI do sistema para criar a ilusão.
-* **Código Minimalista:** O tweak inteiro consiste em uma única classe, tornando-o incrivelmente leve e estável. É um testemunho de como alcançar um efeito visual popular com a solução mais simples possível.
+A partir do **iOS 16**, a Apple reestruturou profundamente o gerenciamento de janelas e múltiplas telas no SpringBoard (principalmente para suportar o Stage Manager e monitores externos):
+* As janelas do SpringBoard não são mais renderizadas globalmente baseadas na tela; em vez disso, as janelas precisam estar explicitamente associadas a uma **`UIWindowScene`** ativa (especificamente a `SBWindowScene` principal do SpringBoard).
+* Se uma `UIWindow` é instanciada sem uma cena (ou pelo método legado `initWithFrame:`), o UIKit a coloca em uma cena virtual desconectada. A janela informa `hidden = NO` e limites válidos, mas o compositor de janelas **nunca a desenha na tela**.
+* Além disso, a `SBWindowScene` nem sempre está conectada quando `-[SpringBoard applicationDidFinishLaunching:]` roda. Criar a janela prematuramente resultava em uma cena nula (`nil`).
+
+### 2. Como o S8Edge Foi Corrigido
+Para restaurar a funcionalidade completa no iOS 16+:
+* **Detecção e Associação com a Cena:** O tweak inspeciona `[UIApplication sharedApplication].connectedScenes` em busca de uma `UIWindowScene` associada a `[UIScreen mainScreen]`, priorizando a `SBWindowScene` do SpringBoard. A janela de sobreposição agora é inicializada explicitamente com `-[CustoWindow initWithWindowScene:]`.
+* **Monitoramento Dinâmico de Conexão:** Caso a `SBWindowScene` principal ainda não tenha se conectado na inicialização do SpringBoard, a classe `s8EdgeUI` escuta as notificações `UISceneWillConnectNotification` e `UISceneDidActivateNotification`, adiando a criação da janela até que a cena esteja pronta. Também lida com `UISceneDidDisconnectNotification`.
+* **Arquitetura com Root View Controller:** Em vez de adicionar views diretamente à janela, o conteúdo é hospedado em um `S8EOverlayViewController` transparente e travado em modo retrato, garantindo o redimensionamento e atualização adequados via `viewDidLayoutSubviews`.
+* **Nível de Janela e Interação Transparente:** A janela usa o nível `10.000.000` (ficando acima de tela de bloqueio, Central de Controle, notificações e banners) e implementa `_ignoresHitTest` para que todos os toques passem direto para os aplicativos.
+* **Suporte Nativo a Rootless:** O projeto foi configurado com `THEOS_PACKAGE_SCHEME = rootless` (`iphoneos-arm64`), direcionando os bundles de preferências para `/var/jb` e corrigindo caminhos absolutos e chamadas de sistema.
+
+## 📱 Compatibilidade
+
+* **Jailbreaks rootless, iOS 15.0 ou superior** (testado no Dopamine, iOS 16.5). Builds rootful não são mais suportadas.
+* ID do pacote: `com.cdustevich1.s8edge`. Ele substitui o original `com.brunonfl.s8edge`; desinstale o antigo primeiro.
+* As configurações são aplicadas após um respring (há um botão Respring no painel de configurações do S8Edge).
 
 ## 💻 Como Compilar
 
-1.  Certifique-se de que você tem a [toolchain Theos](https://theos.dev/) instalada.
-2.  Clone o repositório: `git clone https://github.com/BrunoNFL/s8edge.git`
-3.  Execute `make package` no diretório raiz do projeto.
+1.  Instale o [Theos](https://theos.dev/) com um SDK do iOS (15.0 ou superior) e defina `$THEOS`.
+2.  Clone o repositório:
+    ```bash
+    git clone https://github.com/cdustevich1/s8edge.git
+    cd s8edge
+    ```
+3.  Compile o pacote rootless:
+    ```bash
+    make package
+    ```
+    Isso gera um `.deb` rootless `iphoneos-arm64` em `packages/`.
+4.  Para instalar via SSH no seu dispositivo:
+    ```bash
+    make package install THEOS_DEVICE_IP=<ip-do-dispositivo>
+    ```
 
-**(Nota: Este projeto foi desenvolvido para versões mais antigas do iOS e pode exigir atualizações para compilar e executar em sistemas modernos.)**
+**Créditos:** Criado originalmente por Bruno Andrade ([/u/BrunoNFL](https://reddit.com/u/BrunoNFL)) em 2017. Atualização rootless / iOS 15+ mantida por cdustevich1.

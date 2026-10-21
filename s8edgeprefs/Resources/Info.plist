@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>S8EdgePrefs</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.brunonfl.s8edgeprefs</string>
+	<string>com.cdustevich1.s8edgeprefs</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>

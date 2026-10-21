@@ -1,0 +1,6 @@
+.theos/
+.theos
+packages/com.cdustevich1.*
+.DS_Store
+*.swp
+*~
