@@ -17,6 +17,8 @@ A simple and lightweight jailbreak tweak that brought the popular curved "edge" 
 
 ---
 
+This was updated completely by Antigravity Opus 5.5 Medium to rootless with support for ios 15(?)+ on Dopamine. Tested on 16.5. All credit to BrunoNFL.
+
 ## 💡 The Concept
 
 This project wasn't about adding complex features. It was a direct response to a request from the `/r/jailbreak` subreddit. At a time when phones like the Samsung Galaxy S8 were popularizing curved-edge screens, a user wanted a simple way to bring that aesthetic to their iPhone.
